@@ -4,6 +4,7 @@
   "description": "",
   "main": "src/ViewPager.js",
   "scripts": {
+    "build": "browserify example/minimal.js -t [ babelify --presets [ es2015 react ] ] -d -o example/minimal-bundle.js"
   },
   "author": "ushiboy",
   "license": "MIT",

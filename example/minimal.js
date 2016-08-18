@@ -1,15 +1,6 @@
-# React Dynamic ViewPager
-
-(Draft)
-
-## Usage
-
-minimal case.
-
-```javascript
 import React from 'react';
 import { render } from 'react-dom';
-import ViewPager from 'react-dynamic-viewpager';
+import ViewPager from '../src/ViewPager';
 
 function Page(props) {
   const { index, data } = props;
@@ -35,4 +26,3 @@ render(
   </ViewPager>,
   document.getElementById('app')
 );
-```
