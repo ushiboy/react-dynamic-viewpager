@@ -2,7 +2,7 @@
   "name": "react-dynamic-viewpager",
   "version": "0.1.0",
   "description": "",
-  "main": "index.js",
+  "main": "src/ViewPager.js",
   "scripts": {
   },
   "author": "ushiboy",
