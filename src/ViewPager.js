@@ -39,23 +39,23 @@ export default class ViewPager extends React.Component {
     const nextPage = this._createPageView(index + 1);
 
     return (
-      <div ref="viewPagerContainer" style={{
+      <div className='viewpager-container' ref='viewPagerContainer' style={{
         overflow: 'hidden',
         position: 'relative',
         margin: 0,
         padding: 0,
         cursor: 'move'
       }}>
-        <div ref="viewPagerWrapper" style={{
+        <div className='viewpager-wrapper' ref='viewPagerWrapper' style={{
           position: 'relative',
           float: 'left',
           margin: 0,
           padding: 0,
           transitionProperty: 'transform'
         }}>
-          <div style={childStyle}>{prevPage}</div>
-          <div style={childStyle}>{currentPage}</div>
-          <div style={childStyle}>{nextPage}</div>
+          <div className='viewpager-page' style={childStyle}>{prevPage}</div>
+          <div className='viewpager-page' style={childStyle}>{currentPage}</div>
+          <div className='viewpager-page' style={childStyle}>{nextPage}</div>
         </div>
       </div>
     );
@@ -116,6 +116,9 @@ export default class ViewPager extends React.Component {
 
   _createPageView(index) {
     const { children, data } = this.props;
+    if (typeof data === 'undefined') {
+      return null;
+    }
     const pageData = data[index];
     if (typeof pageData !== 'undefined') {
       const child = Children.only(children);
