@@ -1,5 +1,4 @@
 const assert = require('assert');
-import { spy } from 'sinon';
 import React from 'react';
 import { shallow, mount } from 'enzyme';
 import ViewPager from '../src/ViewPager';
@@ -33,6 +32,16 @@ describe('ViewPager', () => {
         <Page />
       </ViewPager>
     );
-    assert(wrapper.find(Page).length === 2);
+    const pages = wrapper.find(Page);
+    assert(pages.length === 2);
+
+    const page1 = pages.at(0);
+    assert(page1.prop('index') === 0);
+    assert(page1.prop('data') === 'page1');
+
+    const page2 = pages.at(1);
+    assert(page2.prop('index') === 1);
+    assert(page2.prop('data') === 'page2');
   });
+
 });
