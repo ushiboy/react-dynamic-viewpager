@@ -45,7 +45,7 @@ export default class ViewPager extends React.Component {
         margin: 0,
         padding: 0,
         cursor: 'move'
-      }}>
+      }} onTouchStart={this._onTouchStart} onMouseDown={this._onMouseDown}>
         <div className='viewpager-wrapper' ref='viewPagerWrapper' style={{
           position: 'relative',
           float: 'left',
@@ -62,12 +62,6 @@ export default class ViewPager extends React.Component {
   }
 
   componentDidMount() {
-    const { viewPagerContainer } = this.refs;
-    if (this._isTouchOk()) {
-      viewPagerContainer.addEventListener('touchstart', this._onTouchStart, false);
-    } else {
-      viewPagerContainer.addEventListener('mousedown', this._onMouseDown, false);
-    }
     window.addEventListener('resize', this._onWindowResize, false);
     this._setupContainer();
   }
@@ -77,12 +71,6 @@ export default class ViewPager extends React.Component {
   }
 
   componentWillUnmount() {
-    const { viewPagerContainer } = this.refs;
-    if (this._isTouchOk()) {
-      viewPagerContainer.removeEventListener('touchstart', this._onTouchStart, false);
-    } else {
-      viewPagerContainer.removeEventListener('mousedown', this._onMouseDown, false);
-    }
     window.removeEventListener('resize', this._onWindowResize, false);
   }
 
@@ -108,10 +96,6 @@ export default class ViewPager extends React.Component {
       this._listenTransitionEnd(nextIndex);
       this._forwardTranslate();
     }
-  }
-
-  _isTouchOk() {
-    return (typeof window.ontouchend !== 'undefined');
   }
 
   _createPageView(index) {
