@@ -7,12 +7,8 @@ export default class ViewPager extends React.Component {
     this.state = {
       index: props.index
     };
-    this._start = {};
-    this._delta = {};
-    this._before = {};
     this._containerWidth = 0;
     this._currentPosition = 0;
-    this._isVerticalScrolling = undefined;
 
     this._onMouseDown = this._onMouseDown.bind(this);
     this._onMouseMove = this._onMouseMove.bind(this);
@@ -150,58 +146,27 @@ export default class ViewPager extends React.Component {
     this._translate(-2 * this._containerWidth, duration);
   }
 
-  _startSlide(x, y) {
-    this._start = {
-      x,
-      y,
-      time: Date.now()
-    };
-    this._delta = {};
-    this._before = {
-      x,
-      y
-    };
-    this._isVerticalScrolling = undefined;
-  }
-
   _moveSlide(evt, x, y) {
     const { data } = this.props;
     const { index } = this.state;
-    const delta = this._delta = {
-      x: x - this._start.x,
-      y: y - this._start.y
-    };
-    const isForward = delta.x < 0;
-    const nextIndex = isForward ? index + 1 : index - 1;
-    const hasNextPage = typeof data[nextIndex] !== 'undefined';
+    const deltaX = this._gesture.move(x, y);
 
-    if (typeof this._isVerticalScrolling === 'undefined') {
-      this._isVerticalScrolling = Math.abs(delta.x) < Math.abs(delta.y);
-    }
-
-    if (!this._isVerticalScrolling && hasNextPage) {
+    if (this._gesture.isValid()) {
       evt.preventDefault();
-      this._translate((x - this._before.x) + this._currentPosition, 0);
+      this._translate(deltaX + this._currentPosition, 0);
     }
-    this._before = { x, y };
   }
 
   _endSlide() {
-    if (this._isVerticalScrolling) return;
+    const vector = this._gesture.end(20, this._containerWidth / 2);
+    if (!this._gesture.isValid()) return;
 
     const { data } = this.props;
     const { index } = this.state;
-    const deltaX = this._delta.x;
-    const absDeltaX = Math.abs(deltaX);
-    const duration = Date.now() - this._start.time;
-    const isValidSlide = duration < 250 && absDeltaX > 20 || absDeltaX > this._containerWidth / 2;
-    const isForward = deltaX < 0;
-    const nextIndex = isForward ? index + 1 : index - 1;
-    const hasNextPage = typeof data[nextIndex] !== 'undefined';
 
-    if (isValidSlide && hasNextPage) {
-      this._listenTransitionEnd(nextIndex);
-      if (isForward) {
+    if (vector !== 0) {
+      this._listenTransitionEnd(index + vector);
+      if (vector > 0) {
         this._forwardTranslate();
       } else {
         this._backTranslate();
@@ -212,7 +177,12 @@ export default class ViewPager extends React.Component {
   }
 
   _onMouseDown(evt) {
-    this._startSlide(evt.pageX, evt.pageY);
+    const { data } = this.props;
+    const { index } = this.state;
+    const enableBack = index - 1 >= 0;
+    const enableNext = typeof data[index + 1] !== 'undefined';
+    this._gesture = new PagingGesture(enableNext, enableBack);
+    this._gesture.start(evt.pageX, evt.pageY);
     const { viewPagerContainer } = this.refs;
     viewPagerContainer.addEventListener('mousemove', this._onMouseMove, false);
     viewPagerContainer.addEventListener('mouseup', this._onMouseUp, false);
@@ -231,7 +201,12 @@ export default class ViewPager extends React.Component {
 
   _onTouchStart(evt) {
     const [ touch ] = evt.touches;
-    this._startSlide(touch.pageX, touch.pageY);
+    const { data } = this.props;
+    const { index } = this.state;
+    const enableBack = index - 1 >= 0;
+    const enableNext = typeof data[index + 1] !== 'undefined';
+    this._gesture = new PagingGesture(enableNext, enableBack);
+    this._gesture.start(touch.pageX, touch.pageY);
     const { viewPagerContainer } = this.refs;
     viewPagerContainer.addEventListener('touchmove', this._onTouchMove, false);
     viewPagerContainer.addEventListener('touchend', this._onTouchEnd, false);
@@ -296,3 +271,73 @@ ViewPager.propTypes = {
 ViewPager.defaultProps = {
   index: 0
 };
+
+export class PagingGesture {
+
+  constructor(enableNext, enableBack) {
+    this._start = {};
+    this._before = {};
+    this._delta = {};
+    this._isVerticalScrolling = undefined;
+    this._enableNext = enableNext;
+    this._enableBack = enableBack;
+  }
+
+  start(x, y) {
+    this._start = {
+      x,
+      y,
+      time: Date.now()
+    };
+    this._before = {
+      x,
+      y
+    };
+  }
+
+
+  move(x, y) {
+    const delta = this._delta = {
+      x: x - this._start.x,
+      y: y - this._start.y
+    };
+    const isForward = delta.x < 0;
+
+    if (typeof this._isVerticalScrolling === 'undefined') {
+      this._isVerticalScrolling = Math.abs(delta.x) < Math.abs(delta.y);
+    }
+
+    if ((isForward && this._enableNext) || (!isForward && this._enableBack)) {
+      const deltaX = x - this._before.x;
+      this._before = { x, y };
+      return deltaX;
+    }
+
+    return 0;
+  }
+
+  end(min, max) {
+    if (this._isVerticalScrolling) return;
+
+    const deltaX = this._delta.x;
+    const absDeltaX = Math.abs(deltaX);
+    const duration = Date.now() - this._start.time;
+    const isValidSlide = duration < 250 && absDeltaX > min || absDeltaX > max;
+    const isForward = deltaX < 0;
+
+    if (isValidSlide) {
+      if (isForward && this._enableNext) {
+        return 1;
+      } else if(!isForward && this._enableBack) {
+        return -1;
+      }
+    }
+    return 0;
+  }
+
+  isValid() {
+    return this._isVerticalScrolling === false;
+  }
+
+}
+
