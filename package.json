@@ -10,7 +10,7 @@
   ],
   "scripts": {
     "build": "babel src --out-dir lib",
-    "build_example": "browserify example/minimal.js -t [ babelify --presets [ es2015 react ] ] -d -o example/minimal-bundle.js",
+    "build_example": "browserify example/minimal.js -t [ babelify --presets [ es2015 react ] ] -d -o example/minimal-bundle.js && browserify example/extra.js -t [ babelify --presets [ es2015 react ] ] -d -o example/extra-bundle.js",
     "test": "mocha --require test/setup.js test/**/*-test.js"
   },
   "author": "ushiboy",
