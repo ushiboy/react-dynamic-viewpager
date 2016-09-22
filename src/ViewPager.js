@@ -9,14 +9,16 @@ export default class ViewPager extends React.Component {
     };
     this._containerWidth = 0;
     this._currentPosition = 0;
+    this._gesture = null;
+    this._transformer = null;
 
-    this._onMouseDown = this._onMouseDown.bind(this);
-    this._onMouseMove = this._onMouseMove.bind(this);
-    this._onMouseUp = this._onMouseUp.bind(this);
-    this._onTouchStart = this._onTouchStart.bind(this);
-    this._onTouchMove = this._onTouchMove.bind(this);
-    this._onTouchEnd = this._onTouchEnd.bind(this);
-    this._onWindowResize = this._onWindowResize.bind(this);
+    this.handleMouseDown = this.handleMouseDown.bind(this);
+    this.handleMouseMove = this.handleMouseMove.bind(this);
+    this.handleMouseUp = this.handleMouseUp.bind(this);
+    this.handleTouchStart = this.handleTouchStart.bind(this);
+    this.handleTouchMove = this.handleTouchMove.bind(this);
+    this.handleTouchEnd = this.handleTouchEnd.bind(this);
+    this.handleWindowResize = this.handleWindowResize.bind(this);
   }
 
   render() {
@@ -41,7 +43,7 @@ export default class ViewPager extends React.Component {
         margin: 0,
         padding: 0,
         cursor: 'move'
-      }} onTouchStart={this._onTouchStart} onMouseDown={this._onMouseDown}>
+      }} onTouchStart={this.handleTouchStart} onMouseDown={this.handleMouseDown}>
         <div className='viewpager-wrapper' ref='viewPagerWrapper' style={{
           position: 'relative',
           float: 'left',
@@ -58,27 +60,30 @@ export default class ViewPager extends React.Component {
   }
 
   componentDidMount() {
-    window.addEventListener('resize', this._onWindowResize, false);
-    this._setupContainer();
+    window.addEventListener('resize', this.handleWindowResize, false);
+    this._initContainer();
   }
 
   componentWillUpdate() {
-    this._resetCurrentTranslate();
+    this._currentPosition = this._transformer.reset();
   }
 
   componentWillUnmount() {
-    window.removeEventListener('resize', this._onWindowResize, false);
+    this._transformer.destroy();
+    window.removeEventListener('resize', this.handleWindowResize, false);
   }
 
   back() {
     const { index } = this.state;
     const { data } = this.props;
     const nextIndex = index - 1;
-    const hasNextPage = typeof data[nextIndex] !== 'undefined';
+    const hasNextPage = !isUndefined(data[nextIndex]);
 
     if (hasNextPage) {
-      this._listenTransitionEnd(nextIndex);
-      this._backTranslate();
+      this._transformer.transformedCallback = () => {
+        this.setNextIndex(nextIndex);
+      };
+      this._currentPosition = this._transformer.back();
     }
   }
 
@@ -86,146 +91,17 @@ export default class ViewPager extends React.Component {
     const { index } = this.state;
     const { data } = this.props;
     const nextIndex = index + 1;
-    const hasNextPage = typeof data[nextIndex] !== 'undefined';
+    const hasNextPage = !isUndefined(data[nextIndex]);
 
     if (hasNextPage) {
-      this._listenTransitionEnd(nextIndex);
-      this._forwardTranslate();
+      this._transformer.transformedCallback = () => {
+        this.setNextIndex(nextIndex);
+      };
+      this._currentPosition = this._transformer.forward();
     }
   }
 
-  _createPageView(index) {
-    const { children, data } = this.props;
-    if (typeof data === 'undefined') {
-      return null;
-    }
-    const pageData = data[index];
-    if (typeof pageData !== 'undefined') {
-      const child = Children.only(children);
-      return React.cloneElement(child, {
-        index,
-        data: pageData
-      });
-    }
-    return null;
-  }
-
-  _setupContainer() {
-    const { viewPagerContainer, viewPagerWrapper } = this.refs;
-    const containerWidth = this._containerWidth
-      = viewPagerContainer.getBoundingClientRect().width || viewPagerContainer.offsetWidth;
-    viewPagerWrapper.style.width = `${(containerWidth * 3)}px`;
-    Array.from(viewPagerWrapper.children).forEach(pageView => {
-      pageView.style.width = `${containerWidth}px`;
-    });
-    this._resetCurrentTranslate();
-  }
-
-  _translate(dist, speed) {
-    const { style } = this.refs.viewPagerWrapper;
-
-    style.webkitTransitionDuration = style.MozTransitionDuration
-      = style.msTransitionDuration = style.OTransitionDuration
-      = style.transitionDuration = `${speed}ms`;
-
-    style.webkitTransform = `translate(${dist}px,0)translateZ(0)`;
-    style.msTransform = style.MozTransform = style.OTransform = `translateX(${dist}px)`;
-
-    this._currentPosition = dist;
-  }
-
-  _resetCurrentTranslate(duration = 0) {
-    this._translate(-this._containerWidth, duration);
-  }
-
-  _backTranslate(duration = 150) {
-    this._translate(0, duration);
-  }
-
-  _forwardTranslate(duration = 150) {
-    this._translate(-2 * this._containerWidth, duration);
-  }
-
-  _moveSlide(evt, x, y) {
-    const { data } = this.props;
-    const { index } = this.state;
-    const deltaX = this._gesture.move(x, y);
-
-    if (this._gesture.isValid()) {
-      evt.preventDefault();
-      this._translate(deltaX + this._currentPosition, 0);
-    }
-  }
-
-  _endSlide() {
-    const vector = this._gesture.end(20, this._containerWidth / 2);
-    if (!this._gesture.isValid()) return;
-
-    const { data } = this.props;
-    const { index } = this.state;
-
-    if (vector !== 0) {
-      this._listenTransitionEnd(index + vector);
-      if (vector > 0) {
-        this._forwardTranslate();
-      } else {
-        this._backTranslate();
-      }
-    } else {
-      this._resetCurrentTranslate();
-    }
-  }
-
-  _onMouseDown(evt) {
-    const { data } = this.props;
-    const { index } = this.state;
-    const enableBack = index - 1 >= 0;
-    const enableNext = typeof data[index + 1] !== 'undefined';
-    this._gesture = new PagingGesture(enableNext, enableBack);
-    this._gesture.start(evt.pageX, evt.pageY);
-    const { viewPagerContainer } = this.refs;
-    viewPagerContainer.addEventListener('mousemove', this._onMouseMove, false);
-    viewPagerContainer.addEventListener('mouseup', this._onMouseUp, false);
-  }
-
-  _onMouseMove(evt) {
-    this._moveSlide(evt, evt.pageX, evt.pageY);
-  }
-
-  _onMouseUp(evt) {
-    this._endSlide();
-    const { viewPagerContainer } = this.refs;
-    viewPagerContainer.removeEventListener('mousemove', this._onMouseMove, false);
-    viewPagerContainer.removeEventListener('mouseup', this._onMouseUp, false);
-  }
-
-  _onTouchStart(evt) {
-    const [ touch ] = evt.touches;
-    const { data } = this.props;
-    const { index } = this.state;
-    const enableBack = index - 1 >= 0;
-    const enableNext = typeof data[index + 1] !== 'undefined';
-    this._gesture = new PagingGesture(enableNext, enableBack);
-    this._gesture.start(touch.pageX, touch.pageY);
-    const { viewPagerContainer } = this.refs;
-    viewPagerContainer.addEventListener('touchmove', this._onTouchMove, false);
-    viewPagerContainer.addEventListener('touchend', this._onTouchEnd, false);
-  }
-
-  _onTouchMove(evt) {
-    const [touch] = evt.touches;
-    this._moveSlide(evt, touch.pageX, touch.pageY);
-  }
-
-  _onTouchEnd(evt) {
-    this._endSlide();
-    const { viewPagerContainer } = this.refs;
-    viewPagerContainer.removeEventListener('touchmove', this._onTouchMove, false);
-    viewPagerContainer.removeEventListener('touchend', this._onTouchEnd, false);
-  }
-
-  _onTransitionEnd(nextIndex, evt) {
-    this._unListenTransitionEnd();
+  setNextIndex(nextIndex) {
     const oldIndex = this.state.index;
     this.setState({
       index: nextIndex
@@ -235,55 +111,138 @@ export default class ViewPager extends React.Component {
     }
   }
 
-  _listenTransitionEnd(nextIndex) {
-    if (this._bindedOnTransitionEnd) {
-      this._unListenTransitionEnd();
+  handleMouseDown(evt) {
+    this._startGesture(evt.pageX, evt.pageY);
+    const { viewPagerContainer } = this.refs;
+    viewPagerContainer.addEventListener('mousemove', this.handleMouseMove, false);
+    viewPagerContainer.addEventListener('mouseup', this.handleMouseUp, false);
+    viewPagerContainer.addEventListener('mouseout', this.handleMouseUp, false);
+  }
+
+  handleMouseMove(evt) {
+    this._moveGesture(evt, evt.pageX, evt.pageY);
+  }
+
+  handleMouseUp(evt) {
+    this._endGesture();
+    const { viewPagerContainer } = this.refs;
+    viewPagerContainer.removeEventListener('mousemove', this.handleMouseMove, false);
+    viewPagerContainer.removeEventListener('mouseup', this.handleMouseUp, false);
+    viewPagerContainer.removeEventListener('mouseout', this.handleMouseUp, false);
+  }
+
+  handleTouchStart(evt) {
+    const [ touch ] = evt.touches;
+    this._startGesture(touch.pageX, touch.pageY);
+    const { viewPagerContainer } = this.refs;
+    viewPagerContainer.addEventListener('touchmove', this.handleTouchMove, false);
+    viewPagerContainer.addEventListener('touchend', this.handleTouchEnd, false);
+  }
+
+  handleTouchMove(evt) {
+    const [touch] = evt.touches;
+    this._moveGesture(evt, touch.pageX, touch.pageY);
+  }
+
+  handleTouchEnd(evt) {
+    this._endGesture();
+    const { viewPagerContainer } = this.refs;
+    viewPagerContainer.removeEventListener('touchmove', this.handleTouchMove, false);
+    viewPagerContainer.removeEventListener('touchend', this.handleTouchEnd, false);
+  }
+
+  handleWindowResize(evt) {
+    this._initContainer();
+  }
+
+  _initContainer() {
+    const { viewPagerContainer, viewPagerWrapper } = this.refs;
+    const containerWidth = this._containerWidth
+      = viewPagerContainer.getBoundingClientRect().width || viewPagerContainer.offsetWidth;
+    viewPagerWrapper.style.width = `${(containerWidth * 3)}px`;
+    Array.from(viewPagerWrapper.children).forEach(pageView => {
+      pageView.style.width = `${containerWidth}px`;
+    });
+
+    if (this._transformer) {
+      this._transformer.destroy();
     }
-    this._bindedOnTransitionEnd = this._onTransitionEnd.bind(this, nextIndex);
-    const { viewPagerWrapper } = this.refs;
-    viewPagerWrapper.addEventListener('webkitTransitionEnd', this._bindedOnTransitionEnd, false);
-    viewPagerWrapper.addEventListener('msTransitionEnd', this._bindedOnTransitionEnd, false);
-    viewPagerWrapper.addEventListener('oTransitionEnd', this._bindedOnTransitionEnd, false);
-    viewPagerWrapper.addEventListener('otransitionend', this._bindedOnTransitionEnd, false);
-    viewPagerWrapper.addEventListener('transitionend', this._bindedOnTransitionEnd, false);
+    this._transformer = new Transform(viewPagerWrapper, -containerWidth, 0, -2*containerWidth);
+    this._currentPosition = this._transformer.reset();
   }
 
-  _unListenTransitionEnd() {
-    const { viewPagerWrapper } = this.refs;
-    viewPagerWrapper.removeEventListener('webkitTransitionEnd', this._bindedOnTransitionEnd, false);
-    viewPagerWrapper.removeEventListener('msTransitionEnd', this._bindedOnTransitionEnd, false);
-    viewPagerWrapper.removeEventListener('oTransitionEnd', this._bindedOnTransitionEnd, false);
-    viewPagerWrapper.removeEventListener('otransitionend', this._bindedOnTransitionEnd, false);
-    viewPagerWrapper.removeEventListener('transitionend', this._bindedOnTransitionEnd, false);
+  _createPageView(index) {
+    const { children, data } = this.props;
+    if (isUndefined(data)) {
+      return null;
+    }
+    const pageData = data[index];
+    if (!isUndefined(pageData)) {
+      const child = Children.only(children);
+      return React.cloneElement(child, {
+        index,
+        data: pageData
+      });
+    }
+    return null;
   }
 
-  _onWindowResize(evt) {
-    this._setupContainer();
+  _startGesture(x, y) {
+    const { data } = this.props;
+    const { index } = this.state;
+    const enableBack = index - 1 >= 0;
+    const enableNext = !isUndefined(data[index + 1]);
+    this._gesture = new PagingGesture(x, y, enableNext, enableBack);
+  }
+
+  _moveGesture(evt, x, y) {
+    const deltaX = this._gesture.move(x, y);
+    if (this._gesture.isValid()) {
+      evt.preventDefault();
+      this._currentPosition = this._transformer.translate(deltaX + this._currentPosition, 0);
+    }
+  }
+
+  _endGesture() {
+    if (!this._gesture.isValid()) return;
+    const { duration, minDelta } = this.props;
+    const vector = this._gesture.calculateVector(duration, minDelta);
+    if (vector === 0) {
+      this._transformer.transformedCallback = null;
+      this._currentPosition = this._transformer.reset();
+      return;
+    }
+
+    const { index } = this.state;
+    const nextIndex = index + vector;
+    this._transformer.transformedCallback = () => {
+      this.setNextIndex(nextIndex);
+    };
+    if (vector > 0) {
+      this._currentPosition = this._transformer.forward();
+    } else {
+      this._currentPosition = this._transformer.back();
+    }
   }
 
 }
 ViewPager.propTypes = {
   index: PropTypes.number,
+  duration: PropTypes.number,
+  minDelta: PropTypes.number,
   onChange: PropTypes.func,
   data: PropTypes.array.isRequired,
   children: PropTypes.element.isRequired
 };
 ViewPager.defaultProps = {
-  index: 0
+  index: 0,
+  duration: 250,
+  minDelta: 20
 };
 
 export class PagingGesture {
 
-  constructor(enableNext, enableBack) {
-    this._start = {};
-    this._before = {};
-    this._delta = {};
-    this._isVerticalScrolling = undefined;
-    this._enableNext = enableNext;
-    this._enableBack = enableBack;
-  }
-
-  start(x, y) {
+  constructor(x, y, enableNext, enableBack) {
     this._start = {
       x,
       y,
@@ -293,8 +252,11 @@ export class PagingGesture {
       x,
       y
     };
+    this._delta = {};
+    this._isVerticalScrolling = undefined;
+    this._enableNext = enableNext;
+    this._enableBack = enableBack;
   }
-
 
   move(x, y) {
     const delta = this._delta = {
@@ -303,7 +265,7 @@ export class PagingGesture {
     };
     const isForward = delta.x < 0;
 
-    if (typeof this._isVerticalScrolling === 'undefined') {
+    if (isUndefined(this._isVerticalScrolling)) {
       this._isVerticalScrolling = Math.abs(delta.x) < Math.abs(delta.y);
     }
 
@@ -316,13 +278,13 @@ export class PagingGesture {
     return 0;
   }
 
-  end(min, max) {
+  calculateVector(limitDuration, limitDeltaX) {
     if (this._isVerticalScrolling) return;
 
     const deltaX = this._delta.x;
     const absDeltaX = Math.abs(deltaX);
     const duration = Date.now() - this._start.time;
-    const isValidSlide = duration < 250 && absDeltaX > min || absDeltaX > max;
+    const isValidSlide = duration < limitDuration && absDeltaX > limitDeltaX;
     const isForward = deltaX < 0;
 
     if (isValidSlide) {
@@ -341,3 +303,62 @@ export class PagingGesture {
 
 }
 
+class Transform {
+
+  constructor(el, resetPosition, backPosition, forwardPosition) {
+    this._el = el;
+    this.resetPosition = resetPosition;
+    this.backPosition = backPosition;
+    this.forwardPoisition = forwardPosition;
+    this.transformedCallback = null;
+    this.handleTransitionEnd = this.handleTransitionEnd.bind(this);
+
+    el.addEventListener('webkitTransitionEnd', this.handleTransitionEnd, false);
+    el.addEventListener('msTransitionEnd', this.handleTransitionEnd, false);
+    el.addEventListener('oTransitionEnd', this.handleTransitionEnd, false);
+    el.addEventListener('otransitionend', this.handleTransitionEnd, false);
+    el.addEventListener('transitionend', this.handleTransitionEnd, false);
+  }
+
+  destroy() {
+    this._el.removeEventListener('webkitTransitionEnd', this.handleTransitionEnd, false);
+    this._el.removeEventListener('msTransitionEnd', this.handleTransitionEnd, false);
+    this._el.removeEventListener('oTransitionEnd', this.handleTransitionEnd, false);
+    this._el.removeEventListener('otransitionend', this.handleTransitionEnd, false);
+    this._el.removeEventListener('transitionend', this.handleTransitionEnd, false);
+  }
+
+  handleTransitionEnd() {
+    if (this.transformedCallback) {
+      this.transformedCallback();
+    }
+  }
+
+  translate(dist, speed) {
+    const { style } = this._el;
+    style.webkitTransitionDuration = style.MozTransitionDuration
+      = style.msTransitionDuration = style.OTransitionDuration
+      = style.transitionDuration = `${speed}ms`;
+
+    style.webkitTransform = `translate(${dist}px,0)translateZ(0)`;
+    style.msTransform = style.MozTransform = style.OTransform = `translateX(${dist}px)`;
+    return dist;
+  }
+
+  reset(speed = 0) {
+    return this.translate(this.resetPosition, speed);
+  }
+
+  back(speed = 150) {
+    return this.translate(this.backPosition, speed);
+  }
+
+  forward(speed = 150) {
+    return this.translate(this.forwardPoisition, speed);
+  }
+
+}
+
+function isUndefined(val) {
+  return typeof val === 'undefined';
+}
