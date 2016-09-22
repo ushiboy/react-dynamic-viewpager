@@ -279,7 +279,7 @@ export class PagingGesture {
   }
 
   calculateVector(limitDuration, limitDeltaX) {
-    if (this._isVerticalScrolling) return;
+    if (this._isVerticalScrolling) return 0;
 
     const deltaX = this._delta.x;
     const absDeltaX = Math.abs(deltaX);
@@ -303,7 +303,7 @@ export class PagingGesture {
 
 }
 
-class Transform {
+export class Transform {
 
   constructor(el, resetPosition, backPosition, forwardPosition) {
     this._el = el;
