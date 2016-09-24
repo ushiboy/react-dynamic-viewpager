@@ -42,7 +42,7 @@ render(
 ## Props
 
 | Name | Type | Default | Description |
-| - | - | - | - |
+| --- | --- | --- | --- |
 | data **(required)** | array | |List of page data. |
 | index | number | 0 | The index of the current page. |
 | onChange | function | | A callback fired when the page index has been changed. <br /> ``` (newIndex, oldIndex) => {} ``` |
