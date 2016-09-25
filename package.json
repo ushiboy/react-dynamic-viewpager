@@ -1,6 +1,6 @@
 {
   "name": "react-dynamic-viewpager",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "dynamic ViewPager component for React",
   "main": "lib/ViewPager.js",
   "repository": "https://github.com/ushiboy/react-dynamic-viewpager",
