@@ -31,15 +31,19 @@ class App extends React.Component {
       index
     };
     this.handleChangeIndex = this.handleChangeIndex.bind(this);
+    this.handleChangeRange = this.handleChangeRange.bind(this);
   }
 
   render() {
     const { index } = this.state;
     const { data } = this.props;
     return (
-      <ViewPager ref="nyan" index={index} data={data} onChange={this.handleChangeIndex}>
-        <Page />
-      </ViewPager>
+      <div>
+        <input type="range" value={index} max={data.length - 1} onChange={this.handleChangeRange} />
+        <ViewPager ref="nyan" index={index} data={data} onChange={this.handleChangeIndex}>
+          <Page />
+        </ViewPager>
+      </div>
     );
   }
 
@@ -56,6 +60,13 @@ class App extends React.Component {
   }
 
   handleChangeIndex(index) {
+    this.setState({
+      index
+    });
+  }
+
+  handleChangeRange(evt) {
+    const index = Number(evt.target.value);
     this.setState({
       index
     });

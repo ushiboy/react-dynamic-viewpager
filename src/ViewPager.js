@@ -64,6 +64,15 @@ export default class ViewPager extends React.Component {
     this._initContainer();
   }
 
+  componentWillReceiveProps(props) {
+    const { index } = props;
+    if (!isUndefined(index)) {
+      this.setState({
+        index
+      });
+    }
+  }
+
   componentWillUpdate() {
     this._currentPosition = this._transformer.reset();
   }
