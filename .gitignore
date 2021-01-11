@@ -1,3 +1,4 @@
+.node-version
 lib/
 example/*-bundle.js
 package-lock.json
