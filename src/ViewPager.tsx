@@ -1,5 +1,21 @@
-import React, { Children, PropTypes } from 'react';
+import React, { Children } from 'react';
+import { Transform } from './Transform';
+import { PagingGesture } from './PagingGesture';
+import { isUndefined } from './util';
 
+//ViewPager.propTypes = {
+//  index: PropTypes.number,
+//  duration: PropTypes.number,
+//  minDelta: PropTypes.number,
+//  onChange: PropTypes.func,
+//  data: PropTypes.array.isRequired,
+//  children: PropTypes.element.isRequired,
+//};
+//ViewPager.defaultProps = {
+//  index: 0,
+//  duration: 250,
+//  minDelta: 20,
+//};
 export default class ViewPager extends React.Component {
   constructor(props) {
     super(props);
@@ -79,9 +95,9 @@ export default class ViewPager extends React.Component {
     this._initContainer();
   }
 
-  UNSAFE_componentWillReceiveProps(props) {
-    const { index } = props;
-    if (!isUndefined(index)) {
+  componentDidUpdate(prevProps) {
+    const { index } = this.props;
+    if (prevProps.index !== index && !isUndefined(index)) {
       this.setState({
         index,
       });
@@ -92,7 +108,7 @@ export default class ViewPager extends React.Component {
     this._currentPosition = this._transformer.reset();
   }
 
-  UNSAFE_componentWillUnmount() {
+  componentWillUnmount() {
     this._transformer.destroy();
     window.removeEventListener('resize', this.handleWindowResize, false);
   }
@@ -285,154 +301,4 @@ export default class ViewPager extends React.Component {
       this._currentPosition = this._transformer.back();
     }
   }
-}
-//ViewPager.propTypes = {
-//  index: PropTypes.number,
-//  duration: PropTypes.number,
-//  minDelta: PropTypes.number,
-//  onChange: PropTypes.func,
-//  data: PropTypes.array.isRequired,
-//  children: PropTypes.element.isRequired,
-//};
-//ViewPager.defaultProps = {
-//  index: 0,
-//  duration: 250,
-//  minDelta: 20,
-//};
-
-export class PagingGesture {
-  constructor(x, y, enableNext, enableBack) {
-    this._start = {
-      x,
-      y,
-      time: Date.now(),
-    };
-    this._before = {
-      x,
-      y,
-    };
-    this._delta = {};
-    this._isVerticalScrolling = undefined;
-    this._enableNext = enableNext;
-    this._enableBack = enableBack;
-  }
-
-  move(x, y) {
-    const delta = (this._delta = {
-      x: x - this._start.x,
-      y: y - this._start.y,
-    });
-    const isForward = delta.x < 0;
-
-    if (isUndefined(this._isVerticalScrolling)) {
-      this._isVerticalScrolling = Math.abs(delta.x) < Math.abs(delta.y);
-    }
-
-    if ((isForward && this._enableNext) || (!isForward && this._enableBack)) {
-      const deltaX = x - this._before.x;
-      this._before = { x, y };
-      return deltaX;
-    }
-
-    return 0;
-  }
-
-  calculateVector(limitDuration, limitDeltaX) {
-    if (this._isVerticalScrolling) return 0;
-
-    const deltaX = this._delta.x;
-    const absDeltaX = Math.abs(deltaX);
-    const duration = Date.now() - this._start.time;
-    const isValidSlide = duration < limitDuration && absDeltaX > limitDeltaX;
-    const isForward = deltaX < 0;
-
-    if (isValidSlide) {
-      if (isForward && this._enableNext) {
-        return 1;
-      } else if (!isForward && this._enableBack) {
-        return -1;
-      }
-    }
-    return 0;
-  }
-
-  isValid() {
-    return this._isVerticalScrolling === false;
-  }
-}
-
-export class Transform {
-  constructor(el, resetPosition, backPosition, forwardPosition) {
-    this._el = el;
-    this.resetPosition = resetPosition;
-    this.backPosition = backPosition;
-    this.forwardPoisition = forwardPosition;
-    this.transformedCallback = null;
-    this.handleTransitionEnd = this.handleTransitionEnd.bind(this);
-
-    el.addEventListener('webkitTransitionEnd', this.handleTransitionEnd, false);
-    el.addEventListener('msTransitionEnd', this.handleTransitionEnd, false);
-    el.addEventListener('oTransitionEnd', this.handleTransitionEnd, false);
-    el.addEventListener('otransitionend', this.handleTransitionEnd, false);
-    el.addEventListener('transitionend', this.handleTransitionEnd, false);
-  }
-
-  destroy() {
-    this._el.removeEventListener(
-      'webkitTransitionEnd',
-      this.handleTransitionEnd,
-      false
-    );
-    this._el.removeEventListener(
-      'msTransitionEnd',
-      this.handleTransitionEnd,
-      false
-    );
-    this._el.removeEventListener(
-      'oTransitionEnd',
-      this.handleTransitionEnd,
-      false
-    );
-    this._el.removeEventListener(
-      'otransitionend',
-      this.handleTransitionEnd,
-      false
-    );
-    this._el.removeEventListener(
-      'transitionend',
-      this.handleTransitionEnd,
-      false
-    );
-  }
-
-  handleTransitionEnd() {
-    if (this.transformedCallback) {
-      this.transformedCallback();
-    }
-  }
-
-  translate(dist, speed) {
-    const { style } = this._el;
-    style.webkitTransitionDuration = style.MozTransitionDuration = style.msTransitionDuration = style.OTransitionDuration = style.transitionDuration = `${speed}ms`;
-
-    style.webkitTransform = `translate(${dist}px,0)translateZ(0)`;
-    style.msTransform = style.MozTransform = style.OTransform = `translateX(${dist}px)`;
-    return dist;
-  }
-
-  reset(speed = 0) {
-    return this.translate(this.resetPosition, speed);
-  }
-
-  back(speed = 150) {
-    return this.translate(this.backPosition, speed);
-  }
-
-  forward(speed = 150) {
-    return this.translate(this.forwardPoisition, speed);
-  }
-}
-
-function isUndefined(val) {
-  return typeof val === 'undefined';
 }
