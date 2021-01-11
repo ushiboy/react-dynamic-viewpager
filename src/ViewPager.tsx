@@ -79,7 +79,7 @@ export default class ViewPager extends React.Component {
     this._initContainer();
   }
 
-  componentWillReceiveProps(props) {
+  UNSAFE_componentWillReceiveProps(props) {
     const { index } = props;
     if (!isUndefined(index)) {
       this.setState({
@@ -88,11 +88,11 @@ export default class ViewPager extends React.Component {
     }
   }
 
-  componentWillUpdate() {
+  UNSAFE_componentWillUpdate() {
     this._currentPosition = this._transformer.reset();
   }
 
-  componentWillUnmount() {
+  UNSAFE_componentWillUnmount() {
     this._transformer.destroy();
     window.removeEventListener('resize', this.handleWindowResize, false);
   }

@@ -21,7 +21,7 @@ const data = [
 ];
 
 ReactDOM.render(
-  <ViewPager data={data}>
+  <ViewPager index={0} duration={250} minDelta={20} data={data}>
     <Page />
   </ViewPager>,
   document.getElementById('app')
