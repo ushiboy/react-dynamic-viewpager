@@ -1,5 +1,5 @@
 import React from 'react';
-import { render } from 'react-dom';
+import ReactDOM from 'react-dom';
 import ViewPager from '../src/ViewPager';
 
 function Page(props) {
@@ -20,7 +20,7 @@ const data = [
   'test 5'
 ];
 
-render(
+ReactDOM.render(
   <ViewPager data={data}>
     <Page />
   </ViewPager>,

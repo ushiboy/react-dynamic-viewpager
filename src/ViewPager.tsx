@@ -286,19 +286,19 @@ export default class ViewPager extends React.Component {
     }
   }
 }
-ViewPager.propTypes = {
-  index: PropTypes.number,
-  duration: PropTypes.number,
-  minDelta: PropTypes.number,
-  onChange: PropTypes.func,
-  data: PropTypes.array.isRequired,
-  children: PropTypes.element.isRequired,
-};
-ViewPager.defaultProps = {
-  index: 0,
-  duration: 250,
-  minDelta: 20,
-};
+//ViewPager.propTypes = {
+//  index: PropTypes.number,
+//  duration: PropTypes.number,
+//  minDelta: PropTypes.number,
+//  onChange: PropTypes.func,
+//  data: PropTypes.array.isRequired,
+//  children: PropTypes.element.isRequired,
+//};
+//ViewPager.defaultProps = {
+//  index: 0,
+//  duration: 250,
+//  minDelta: 20,
+//};
 
 export class PagingGesture {
   constructor(x, y, enableNext, enableBack) {
