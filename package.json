@@ -9,31 +9,39 @@
     "lib"
   ],
   "scripts": {
-    "build": "babel src --out-dir lib",
-    "build_example": "browserify example/minimal.js -t [ babelify --presets [ es2015 react ] ] -d -o example/minimal-bundle.js && browserify example/extra.js -t [ babelify --presets [ es2015 react ] ] -d -o example/extra-bundle.js",
-    "test": "mocha --require test/setup.js test/**/*-test.js"
+    "start": "webpack serve",
+    "clean": "rm -rf lib",
+    "lint": "eslint src/**/*.ts",
+    "build": "npm run clean && tsc",
+    "test": "mocha --require test/setup.js test/**/*-test.js",
+    "format": "prettier --write 'src/**/*.(t|j)s?(x)'"
   },
   "author": "ushiboy",
   "license": "MIT",
-  "dependencies": {
-    "react": "^15.3.0",
-    "react-dom": "^15.3.0"
+  "peerDependencies": {
+    "react": "^17.0.0-0",
+    "react-dom": "^17.0.0-0"
   },
   "devDependencies": {
-    "babel-cli": "^6.14.0",
-    "babel-preset-es2015": "^6.13.2",
-    "babel-preset-power-assert": "^1.0.0",
-    "babel-preset-react": "^6.11.1",
-    "babel-register": "^6.11.6",
-    "babelify": "^7.3.0",
-    "browserify": "^13.1.0",
+    "@types/react": "^17.0.0",
+    "@types/react-dom": "^17.0.0",
+    "@typescript-eslint/eslint-plugin": "^4.12.0",
+    "@typescript-eslint/parser": "^4.12.0",
     "enzyme": "^2.4.1",
-    "eslint": "^3.3.1",
+    "eslint": "^7.17.0",
+    "eslint-plugin-import": "^2.22.1",
     "eslint-plugin-react": "^6.1.2",
+    "html-webpack-plugin": "^4.5.1",
     "jsdom": "^9.4.2",
     "mocha": "^3.0.2",
     "power-assert": "^1.4.1",
+    "prettier": "^2.2.1",
     "react-addons-test-utils": "^15.3.1",
-    "sinon": "^1.17.5"
+    "sinon": "^1.17.5",
+    "ts-loader": "^8.0.14",
+    "typescript": "^4.1.3",
+    "webpack": "^5.12.3",
+    "webpack-cli": "^4.3.1",
+    "webpack-dev-server": "^3.11.1"
   }
 }
