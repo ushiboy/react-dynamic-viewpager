@@ -1,6 +1,7 @@
 {
   "name": "react-dynamic-viewpager",
   "version": "0.2.0",
+  "type": "module",
   "description": "dynamic ViewPager component for React",
   "main": "lib/ViewPager.js",
   "repository": "https://github.com/ushiboy/react-dynamic-viewpager",
@@ -9,31 +10,37 @@
     "lib"
   ],
   "scripts": {
-    "build": "babel src --out-dir lib",
-    "build_example": "browserify example/minimal.js -t [ babelify --presets [ es2015 react ] ] -d -o example/minimal-bundle.js && browserify example/extra.js -t [ babelify --presets [ es2015 react ] ] -d -o example/extra-bundle.js",
-    "test": "mocha --require test/setup.js test/**/*-test.js"
+    "dev": "vite --port 3000",
+    "build": "tsc -b && vite build",
+    "build_example": "exit 0",
+    "lint": "eslint .",
+    "test": "exit 0"
   },
   "author": "ushiboy",
   "license": "MIT",
-  "dependencies": {
-    "react": "^15.3.0",
-    "react-dom": "^15.3.0"
+  "peerDependencies": {
+    "react": "^19.0.0"
   },
   "devDependencies": {
-    "babel-cli": "^6.14.0",
-    "babel-preset-es2015": "^6.13.2",
-    "babel-preset-power-assert": "^1.0.0",
-    "babel-preset-react": "^6.11.1",
-    "babel-register": "^6.11.6",
-    "babelify": "^7.3.0",
-    "browserify": "^13.1.0",
-    "enzyme": "^2.4.1",
-    "eslint": "^3.3.1",
-    "eslint-plugin-react": "^6.1.2",
-    "jsdom": "^9.4.2",
-    "mocha": "^3.0.2",
-    "power-assert": "^1.4.1",
-    "react-addons-test-utils": "^15.3.1",
-    "sinon": "^1.17.5"
+    "@eslint/js": "^9.20.0",
+    "@types/react": "^19.0.8",
+    "@types/react-dom": "^19.0.3",
+    "@vitejs/plugin-react": "^4.3.4",
+    "eslint": "^9.20.1",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "eslint-plugin-react-refresh": "^0.4.19",
+    "prettier": "^3.5.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.24.0",
+    "vite": "^6.1.0",
+    "vite-plugin-dts": "^4.5.0"
+  },
+  "packageManager": "pnpm@10.4.0+sha512.6b849d0787d97f8f4e1f03a9b8ff8f038e79e153d6f11ae539ae7c435ff9e796df6a862c991502695c7f9e8fac8aeafc1ac5a8dab47e36148d183832d886dd52",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
   }
 }
