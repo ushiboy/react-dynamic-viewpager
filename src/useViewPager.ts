@@ -1,4 +1,10 @@
-import { useState, useRef, useEffect, useImperativeHandle } from "react";
+import {
+  useCallback,
+  useState,
+  useRef,
+  useEffect,
+  useImperativeHandle,
+} from "react";
 import { ViewPagerRef, OnChangeEventHandler } from "./type";
 
 type Props<T> = {
@@ -9,13 +15,18 @@ type Props<T> = {
 };
 
 export function useViewPager<T>({ index, ref, data, onChange }: Props<T>) {
-  const [internalIndex, setInternalIndex] = useState(index || 0);
-  const [containerWidth, setContainerWidth] = useState(0);
   const refContainer = useRef<HTMLDivElement>(null);
   const refWrapper = useRef<HTMLDivElement>(null);
 
-  const transitionDuration = "0ms";
-  const transform = `translate(${-containerWidth}px,0)`;
+  const [internalIndex, setInternalIndex] = useState(index || 0);
+  const [containerWidth, setContainerWidth] = useState(0);
+  const [transitionDuration, setTransitionDuration] = useState("");
+  const [transform, setTransform] = useState("");
+
+  const translate = useCallback((translateX: number, duration: number = 0) => {
+    setTransitionDuration(`${duration}ms`);
+    setTransform(`translate(${translateX}px, 0)`);
+  }, []);
 
   useEffect(() => {
     if (index != null) {
@@ -25,43 +36,58 @@ export function useViewPager<T>({ index, ref, data, onChange }: Props<T>) {
 
   useEffect(() => {
     const handle = () => {
-      setContainerWidth(calculateWidth(refContainer.current));
+      const w = calculateWidth(refContainer.current);
+      setContainerWidth(w);
+      translate(-w);
     };
     window.addEventListener("resize", handle, false);
 
     return () => {
       window.removeEventListener("resize", handle, false);
     };
-  }, []);
+  }, [translate]);
 
   useEffect(() => {
-    setContainerWidth(calculateWidth(refContainer.current));
-  }, []);
+    const w = calculateWidth(refContainer.current);
+    setContainerWidth(w);
+    translate(-w);
+  }, [translate]);
+
+  const changeInternalIndex = useCallback(
+    (newIndex: number, oldIndex: number, animation: () => void) => {
+      if (!data[newIndex]) return;
+
+      animation();
+      setInternalIndex(newIndex);
+      if (onChange) {
+        onChange(newIndex, oldIndex);
+      }
+    },
+    [data, onChange, containerWidth],
+  );
 
   useImperativeHandle(ref, () => {
+    const reset = () => {
+      setTimeout(() => {
+        translate(-containerWidth, 0);
+      }, 160);
+    };
+
     return {
       forward() {
-        const newIndex = internalIndex + 1;
-        const hasNextPage = data[newIndex] != null;
-        if (hasNextPage) {
-          setInternalIndex(newIndex);
-          if (onChange) {
-            onChange(newIndex, internalIndex);
-          }
-        }
+        changeInternalIndex(internalIndex + 1, internalIndex, () => {
+          translate(-2 * containerWidth, 150);
+          reset();
+        });
       },
       back() {
-        const newIndex = internalIndex - 1;
-        const hasBeforePage = data[newIndex] != null;
-        if (hasBeforePage) {
-          setInternalIndex(newIndex);
-          if (onChange) {
-            onChange(newIndex, internalIndex);
-          }
-        }
+        changeInternalIndex(internalIndex - 1, internalIndex, () => {
+          translate(0, 150);
+          reset();
+        });
       },
     };
-  }, [data, internalIndex, onChange]);
+  }, [internalIndex, changeInternalIndex, containerWidth, translate]);
 
   return {
     internalIndex,
