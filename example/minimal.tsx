@@ -10,7 +10,7 @@ type Props = {
 function Page(props: Props) {
   const { index, data } = props;
   return (
-    <div>
+    <div style={{ minHeight: 480 }}>
       <p>Page {index + 1}</p>
       <p>{data}</p>
     </div>
