@@ -24,9 +24,6 @@ export function ViewPager<T>({
   ref,
   onChange,
 }: Props<T>) {
-  duration = duration || 250;
-  minDelta = minDelta || 20;
-
   const {
     internalIndex,
     refContainer,
@@ -34,10 +31,15 @@ export function ViewPager<T>({
     containerWidth,
     transitionDuration,
     transform,
+    userSelect,
+    handleMouseDown,
+    handleTouchStart,
   } = useViewPager({
+    data,
     index,
     ref,
-    data,
+    duration,
+    minDelta,
     onChange,
   });
 
@@ -52,6 +54,8 @@ export function ViewPager<T>({
         padding: 0,
         cursor: "move",
       }}
+      onMouseDown={handleMouseDown}
+      onTouchStart={handleTouchStart}
     >
       <div
         className="viewpager-wrapper"
@@ -65,19 +69,17 @@ export function ViewPager<T>({
           width: containerWidth * 3,
           transitionDuration,
           transform,
-        }}
-        onTransitionEnd={() => {
-          // TODO
+          userSelect,
         }}
       >
         <Page width={containerWidth}>
-          {renderPage(internalIndex - 1, data, ItemComponent)}
+          {renderContent(internalIndex - 1, data, ItemComponent)}
         </Page>
         <Page width={containerWidth}>
-          {renderPage(internalIndex, data, ItemComponent)}
+          {renderContent(internalIndex, data, ItemComponent)}
         </Page>
         <Page width={containerWidth}>
-          {renderPage(internalIndex + 1, data, ItemComponent)}
+          {renderContent(internalIndex + 1, data, ItemComponent)}
         </Page>
       </div>
     </div>
@@ -110,7 +112,7 @@ function Page({
   );
 }
 
-function renderPage<T>(
+function renderContent<T>(
   index: number,
   data: T[],
   Component: ViewPagerItemComponent<T>,
