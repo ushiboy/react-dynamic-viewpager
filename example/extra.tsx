@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { StrictMode, useState, useEffect, useRef, KeyboardEvent } from "react";
 import { createRoot } from "react-dom/client";
 import { ViewPager, ViewPagerRef } from "../src/";

@@ -11,8 +11,7 @@
   ],
   "scripts": {
     "dev": "vite --port 3000 --host 0.0.0.0",
-    "build": "tsc -b && vite build",
-    "build_example": "exit 0",
+    "build": "rm -rf ./dist && tsc -b && vite build",
     "lint": "eslint .",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage"

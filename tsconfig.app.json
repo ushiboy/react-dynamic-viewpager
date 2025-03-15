@@ -31,5 +31,5 @@
       "@testing-library/jest-dom"
     ]
   },
-  "include": ["src", "example"]
+  "include": ["src"]
 }

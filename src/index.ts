@@ -3,4 +3,6 @@ export type {
   ViewPagerItemProps,
   ViewPagerItemComponent,
   ViewPagerRef,
-} from "./ViewPager";
+  ViewPagerRefProps,
+  OnChangeEventHandler,
+} from "./type";
