@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [ master, develop ]
+    types: [ opened, synchronize, reopened ]
+
+jobs:
+  test:
+    name: Test and Build (React ${{ matrix.react-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        react-version: ['19.0', '19.1']
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+          
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+          
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+            
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        
+      - name: Install React ${{ matrix.react-version }}
+        run: pnpm add react@${{ matrix.react-version }} react-dom@${{ matrix.react-version }} --save-dev
+        
+      - name: Run linting
+        run: pnpm lint
+        
+      - name: Run tests
+        run: pnpm test
+        
+      - name: Build library
+        run: pnpm build
