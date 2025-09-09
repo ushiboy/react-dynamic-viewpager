@@ -3,15 +3,38 @@
   "version": "0.2.0",
   "type": "module",
   "description": "dynamic ViewPager component for React",
-  "main": "lib/ViewPager.js",
+  "main": "lib/index.cjs",
+  "module": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "import": "./lib/index.js",
+      "require": "./lib/index.cjs"
+    },
+    "./ViewPager": {
+      "types": "./lib/ViewPager.d.ts",
+      "import": "./lib/ViewPager.js",
+      "require": "./lib/ViewPager.cjs"
+    },
+    "./useViewPager": {
+      "types": "./lib/useViewPager.d.ts",
+      "import": "./lib/useViewPager.js",
+      "require": "./lib/useViewPager.cjs"
+    },
+    "./type": {
+      "types": "./lib/type.d.ts",
+      "import": "./lib/type.js",
+      "require": "./lib/type.cjs"
+    }
+  },
   "repository": "https://github.com/ushiboy/react-dynamic-viewpager",
   "files": [
-    "src",
     "lib"
   ],
   "scripts": {
     "dev": "vite --port 3000 --host 0.0.0.0",
-    "build": "rm -rf ./dist && tsc -b && vite build",
+    "build": "rm -rf ./lib && tsc -b && vite build",
     "lint": "eslint .",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage"
